@@ -1,5 +1,5 @@
 import streamlit as st
-from PIL import Image
+from PIL import Image, ImageDraw
 import numpy as np
 import pandas as pd
 import io
@@ -113,11 +113,16 @@ with tabs[2]:
                 left_col, right_col = st.columns(2)
 
                 with left_col:
-                    image = st.session_state.image
+                    image = st.session_state.image.copy()
                     w, h = image.size
+                    draw = ImageDraw.Draw(image)
+                    for i in range(1, 7):
+                        draw.line([(w*i//7, 0), (w*i//7, h)], fill="red", width=1)
+                        draw.line([(0, h*i//7), (w, h*i//7)], fill="red", width=1)
                     cell_w = w // cols
                     cell_h = h // rows
-                    cell_img = image.crop((col*cell_w, row*cell_h, (col+1)*cell_w, (row+1)*cell_h))
+                    cell_img = st.session_state.image.crop((col*cell_w, row*cell_h, (col+1)*cell_w, (row+1)*cell_h))
+                    st.image(image, caption="보조선 포함 원본 이미지", use_container_width=True)
                     st.image(cell_img, caption=f"셀 {cell_id} 이미지", use_container_width=True)
 
                 with right_col:
@@ -164,19 +169,19 @@ with tabs[3]:
                     "연번": f"{r*cols + c + 1:04}",
                     "격자위치": f"{c+1:02}{r+1:02}",
                     "색상코드": hex_color,
-                    "Cyan(%)": round(c_c * 100, 2),
-                    "Magenta(%)": round(m_c * 100, 2),
-                    "Yellow(%)": round(y_c * 100, 2),
-                    "Black(%)": round(k * 100, 2),
-                    "White(%)": round(w_c * 100, 2),
+                    "Cyan(%)": f"{c_c * 100:.2f}",
+                    "Magenta(%)": f"{m_c * 100:.2f}",
+                    "Yellow(%)": f"{y_c * 100:.2f}",
+                    "Black(%)": f"{k * 100:.2f}",
+                    "White(%)": f"{w_c * 100:.2f}",
                     "미리보기": f"background:{hex_color}"
                 })
 
         df = pd.DataFrame(data)
 
-        # 스타일링: 미리보기 색상 셀 배경으로 표시
+        # 스타일링: 미리보기 색상 셀 배경으로 표시 (텍스트 제거)
         def style_preview(val):
-            return f"background-color: {val.split(':')[1]}"
+            return f"background-color: {val.split(':')[1]}; color: transparent"
 
         styled_df = df.style.applymap(style_preview, subset=['미리보기'])
         st.dataframe(styled_df, use_container_width=True)
