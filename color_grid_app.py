@@ -120,12 +120,12 @@ with tabs[2]:
                     box = (col * cell_w, row * cell_h, (col + 1) * cell_w, (row + 1) * cell_h)
                     cell_img = image.crop(box)
 
-                    # 보조선 추가 (7등분)
+                    # 보조선 추가 (10등분)
                     draw = ImageDraw.Draw(cell_img)
                     cw, ch = cell_img.size
-                    for i in range(1, 7):
-                        draw.line([(cw * i // 7, 0), (cw * i // 7, ch)], fill="red", width=1)
-                        draw.line([(0, ch * i // 7), (cw, ch * i // 7)], fill="red", width=1)
+                    for i in range(1, 10):
+                        draw.line([(cw * i // 10, 0), (cw * i // 10, ch)], fill="red", width=1)
+                        draw.line([(0, ch * i // 10), (cw, ch * i // 10)], fill="red", width=1)
 
                     st.image(cell_img, caption=f"셀 {cell_id} (보조선 포함)", use_container_width=True)
 
