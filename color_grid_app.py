@@ -115,15 +115,19 @@ with tabs[2]:
                 with left_col:
                     image = st.session_state.image.copy()
                     w, h = image.size
-                    draw = ImageDraw.Draw(image)
-                    for i in range(1, 7):
-                        draw.line([(w*i//7, 0), (w*i//7, h)], fill="red", width=1)
-                        draw.line([(0, h*i//7), (w, h*i//7)], fill="red", width=1)
                     cell_w = w // cols
                     cell_h = h // rows
-                    cell_img = st.session_state.image.crop((col*cell_w, row*cell_h, (col+1)*cell_w, (row+1)*cell_h))
-                    st.image(image, caption="보조선 포함 원본 이미지", use_container_width=True)
-                    st.image(cell_img, caption=f"셀 {cell_id} 이미지", use_container_width=True)
+                    box = (col * cell_w, row * cell_h, (col + 1) * cell_w, (row + 1) * cell_h)
+                    cell_img = image.crop(box)
+
+                    # 보조선 추가 (7등분)
+                    draw = ImageDraw.Draw(cell_img)
+                    cw, ch = cell_img.size
+                    for i in range(1, 7):
+                        draw.line([(cw * i // 7, 0), (cw * i // 7, ch)], fill="red", width=1)
+                        draw.line([(0, ch * i // 7), (cw, ch * i // 7)], fill="red", width=1)
+
+                    st.image(cell_img, caption=f"셀 {cell_id} (보조선 포함)", use_container_width=True)
 
                 with right_col:
                     st.markdown(f"<div style='width:100%;aspect-ratio:1/1;background:{hex_color}'></div>", unsafe_allow_html=True)
