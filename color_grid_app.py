@@ -1,6 +1,8 @@
 import streamlit as st
 from PIL import Image
 import numpy as np
+import pandas as pd
+import io
 
 st.set_page_config(page_title="격자 색상 분석", layout="wide")
 
@@ -30,7 +32,7 @@ if "pending_grid_size" not in st.session_state:
     st.session_state.pending_grid_size = (4, 4)
 
 # 탭 구성
-tabs = st.tabs(["1. 시작", "2. 전체 보기", "3. 조각 보기"])
+tabs = st.tabs(["1. 시작", "2. 전체 보기", "3. 조각 보기", "4. 조색정보"])
 
 # === 1. 이미지 업로드 탭 ===
 with tabs[0]:
@@ -45,7 +47,7 @@ with tabs[0]:
         st.session_state.image = image
         st.image(image, caption="업로드된 이미지", use_container_width=True)
 
-        if st.button("🔍 분석 시작"):
+        if st.button("?? 분석 시작"):
             st.session_state.grid_size = (pending_cols, pending_rows)
             cols, rows = st.session_state.grid_size
 
@@ -123,3 +125,48 @@ with tabs[2]:
                     st.markdown(f"<p style='text-align:center;'><strong>셀 {cell_id} 평균 색상: `{hex_color}`</strong></p>", unsafe_allow_html=True)
             else:
                 st.error("입력한 셀 번호가 격자 범위를 벗어났어요.")
+
+# === 4. 조색정보 탭 ===
+with tabs[3]:
+    st.header("4. 조색정보")
+    if not st.session_state.avg_colors:
+        st.warning("이미지를 업로드하고 분석을 먼저 해주세요.")
+    else:
+        cols, rows = st.session_state.grid_size
+        grid = st.session_state.avg_colors
+        data = []
+
+        for r in range(rows):
+            for c in range(cols):
+                hex_color = grid[r][c]
+                rgb = tuple(int(hex_color[i:i+2], 16) for i in (1, 3, 5))
+                r_f, g_f, b_f = [x / 255.0 for x in rgb]
+                k = 1 - max(r_f, g_f, b_f)
+                if k < 1:
+                    c_c = (1 - r_f - k) / (1 - k)
+                    m_c = (1 - g_f - k) / (1 - k)
+                    y_c = (1 - b_f - k) / (1 - k)
+                else:
+                    c_c = m_c = y_c = 0
+
+                data.append({
+                    "연번": f"{r*cols + c + 1:04}",
+                    "격자위치": f"{c+1:02}{r+1:02}",
+                    "색상코드": hex_color,
+                    "Cyan(%)": round(c_c * 100, 2),
+                    "Magenta(%)": round(m_c * 100, 2),
+                    "Yellow(%)": round(y_c * 100, 2),
+                    "White(%)": round(k * 100, 2)
+                })
+
+        df = pd.DataFrame(data)
+        st.dataframe(df, use_container_width=True)
+
+        # CSV 다운로드 버튼
+        csv = df.to_csv(index=False).encode('utf-8-sig')
+        st.download_button(
+            label="?? CSV 다운로드",
+            data=csv,
+            file_name="color_mix_info.csv",
+            mime="text/csv"
+        )
