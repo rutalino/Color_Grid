@@ -47,7 +47,7 @@ with tabs[0]:
         st.session_state.image = image
         st.image(image, caption="업로드된 이미지", use_container_width=True)
 
-        if st.button("?? 분석 시작"):
+        if st.button("🔍 분석 시작"):
             st.session_state.grid_size = (pending_cols, pending_rows)
             cols, rows = st.session_state.grid_size
 
@@ -141,6 +141,8 @@ with tabs[3]:
                 hex_color = grid[r][c]
                 rgb = tuple(int(hex_color[i:i+2], 16) for i in (1, 3, 5))
                 r_f, g_f, b_f = [x / 255.0 for x in rgb]
+
+                # CMYK 변환
                 k = 1 - max(r_f, g_f, b_f)
                 if k < 1:
                     c_c = (1 - r_f - k) / (1 - k)
@@ -149,11 +151,14 @@ with tabs[3]:
                 else:
                     c_c = m_c = y_c = 0
 
-                total = c_c + m_c + y_c + k
+                w_c = min(r_f, g_f, b_f)
+
+                total = c_c + m_c + y_c + k + w_c
                 c_c /= total
                 m_c /= total
                 y_c /= total
                 k /= total
+                w_c /= total
 
                 data.append({
                     "연번": f"{r*cols + c + 1:04}",
@@ -162,7 +167,8 @@ with tabs[3]:
                     "Cyan(%)": round(c_c * 100, 2),
                     "Magenta(%)": round(m_c * 100, 2),
                     "Yellow(%)": round(y_c * 100, 2),
-                    "White(%)": round(k * 100, 2)
+                    "Black(%)": round(k * 100, 2),
+                    "White(%)": round(w_c * 100, 2)
                 })
 
         df = pd.DataFrame(data)
