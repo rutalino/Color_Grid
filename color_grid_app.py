@@ -149,6 +149,12 @@ with tabs[3]:
                 else:
                     c_c = m_c = y_c = 0
 
+                total = c_c + m_c + y_c + k
+                c_c /= total
+                m_c /= total
+                y_c /= total
+                k /= total
+
                 data.append({
                     "연번": f"{r*cols + c + 1:04}",
                     "격자위치": f"{c+1:02}{r+1:02}",
@@ -165,7 +171,7 @@ with tabs[3]:
         # CSV 다운로드 버튼
         csv = df.to_csv(index=False).encode('utf-8-sig')
         st.download_button(
-            label="?? CSV 다운로드",
+            label="📥 CSV 다운로드",
             data=csv,
             file_name="color_mix_info.csv",
             mime="text/csv"
