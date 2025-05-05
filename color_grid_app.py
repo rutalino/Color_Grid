@@ -128,7 +128,7 @@ with tabs[2]:
 
 # === 4. 조색정보 탭 ===
 with tabs[3]:
-    st.header("4. 조색정보")
+    st.header("4. 조색 정보")
     if not st.session_state.avg_colors:
         st.warning("이미지를 업로드하고 분석을 먼저 해주세요.")
     else:
@@ -168,14 +168,21 @@ with tabs[3]:
                     "Magenta(%)": round(m_c * 100, 2),
                     "Yellow(%)": round(y_c * 100, 2),
                     "Black(%)": round(k * 100, 2),
-                    "White(%)": round(w_c * 100, 2)
+                    "White(%)": round(w_c * 100, 2),
+                    "미리보기": f"background:{hex_color}"
                 })
 
         df = pd.DataFrame(data)
-        st.dataframe(df, use_container_width=True)
+
+        # 스타일링: 미리보기 색상 셀 배경으로 표시
+        def style_preview(val):
+            return f"background-color: {val.split(':')[1]}"
+
+        styled_df = df.style.applymap(style_preview, subset=['미리보기'])
+        st.dataframe(styled_df, use_container_width=True)
 
         # CSV 다운로드 버튼
-        csv = df.to_csv(index=False).encode('utf-8-sig')
+        csv = df.drop(columns=['미리보기']).to_csv(index=False).encode('utf-8-sig')
         st.download_button(
             label="📥 CSV 다운로드",
             data=csv,
